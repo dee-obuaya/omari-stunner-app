@@ -1,6 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import './index.css'
 import MainApp from './routes'
 import ErrorPage from './error'
@@ -11,46 +11,50 @@ import Contact from './routes/Contact'
 
 const router = createBrowserRouter([
     {
+        path: '/',
+        element: <Navigate to="/home" replace state={{defaultActiveFromRedirect: 'home'}} />,
+    },
+    {
         path: '/home',
-        element: <MainApp />,
+        element: <MainApp defaultActive='home' />,
         errorElement: <ErrorPage />,
         children: [
             {
                 path: '/home',
-                element: <Home defaultActive='home' />,
+                element: <Home />,
             },
         ],
     },
     {
         path:'/gallery',
-        element: <MainApp />,
+        element: <MainApp defaultActive='gallery' />,
         errorElement: <ErrorPage />,
         children: [
             {
                 path: '/gallery',
-                element: <Gallery defaultActive='gallery' />,
+                element: <Gallery />,
             }
         ]
     },
     {
         path:'/services',
-        element: <MainApp />,
+        element: <MainApp defaultActive='services' />,
         errorElement: <ErrorPage />,
         children: [
             {
                 path: '/services',
-                element: <Services defaultActive='services' />,
+                element: <Services />,
             }
         ]
     },
     {
         path:'/contact',
-        element: <MainApp />,
+        element: <MainApp defaultActive='contact' />,
         errorElement: <ErrorPage />,
         children: [
             {
                 path: '/contact',
-                element: <Contact defaultActive='contact' />,
+                element: <Contact />,
             }
         ]
     },
