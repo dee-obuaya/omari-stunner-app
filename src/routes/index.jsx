@@ -1,13 +1,15 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
-import { Outlet, Link } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import ThemeToggle from '../components/ThemeToggler';
 import NavTab from '../components/NavTab';
 import Footer from '../components/Footer';
 
 export default function MainApp(props) {
+    const location = useLocation();
+    const { defaultActiveFromRedirect } = location.state || {};
     const { defaultActive } = props;
-    const [activeTab, setActiveTab] = useState(defaultActive);
+    const [activeTab, setActiveTab] = useState(defaultActive || defaultActiveFromRedirect);
 
     const handleTabChange = (tab) => {
         const currentTab = document.querySelector(`.${activeTab}-tab`);
