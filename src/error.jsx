@@ -1,5 +1,5 @@
 import { useRouteError } from "react-router-dom";
-import { FaCircleExclamation } from "react-icons/fa6";
+// import { FaCircleExclamation } from "react-icons/fa6";
 
 export default function ErrorPage() {
   const error = useRouteError();
@@ -7,7 +7,7 @@ export default function ErrorPage() {
 
   return (
     <div id="error-page" className="flex flex-col self-center">
-        <FaCircleExclamation />
+        {/* <FaCircleExclamation /> */}
         <h1>Oops!</h1>
         <p>Sorry, an unexpected error has occurred.</p>
         <p>
