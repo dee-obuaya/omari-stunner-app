@@ -10,29 +10,50 @@ import Gallery from './routes/Gallery'
 import Contact from './routes/Contact'
 
 const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <MainApp />,
-    errorElement: <ErrorPage />,
-    children: [
-        {
-            path: '/home',
-            element: <Home />,
-        },
-        {
-            path: '/gallery',
-            element: <Gallery />,
-        },
-        {
-            path: '/services',
-            element: <Services />,
-        },
-        {
-            path: '/contact',
-            element: <Contact />,
-        }
-    ]
-  },
+    {
+        path: '/home',
+        element: <MainApp />,
+        errorElement: <ErrorPage />,
+        children: [
+            {
+                path: '/home',
+                element: <Home defaultActive='home' />,
+            },
+        ],
+    },
+    {
+        path:'/gallery',
+        element: <MainApp />,
+        errorElement: <ErrorPage />,
+        children: [
+            {
+                path: '/gallery',
+                element: <Gallery defaultActive='gallery' />,
+            }
+        ]
+    },
+    {
+        path:'/services',
+        element: <MainApp />,
+        errorElement: <ErrorPage />,
+        children: [
+            {
+                path: '/services',
+                element: <Services defaultActive='services' />,
+            }
+        ]
+    },
+    {
+        path:'/contact',
+        element: <MainApp />,
+        errorElement: <ErrorPage />,
+        children: [
+            {
+                path: '/contact',
+                element: <Contact defaultActive='contact' />,
+            }
+        ]
+    },
 ]);
 
 createRoot(document.getElementById('root')).render(
