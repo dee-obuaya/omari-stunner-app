@@ -5,8 +5,9 @@ import ThemeToggle from '../components/ThemeToggler';
 import NavTab from '../components/NavTab';
 import Footer from '../components/Footer';
 
-export default function MainApp() {
-    const [activeTab, setActiveTab] = useState('home');
+export default function MainApp(props) {
+    const { defaultActive } = props;
+    const [activeTab, setActiveTab] = useState(defaultActive);
 
     const handleTabChange = (tab) => {
         const currentTab = document.querySelector(`.${activeTab}-tab`);
