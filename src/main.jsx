@@ -9,59 +9,57 @@ import Home from './routes/Home'
 import Gallery from './routes/Gallery'
 import Contact from './routes/Contact'
 
+
+const getActiveTab = () => {
+    const url = new URL(window.location.href);
+    let valueToPass = 'home';
+
+    if (url.pathname.includes('/home')) {
+        valueToPass = 'home';
+    } else if (url.pathname.includes('/gallery')) {
+        valueToPass = 'gallery';
+    } else if (url.pathname.includes('/services')) {
+        valueToPass = 'services';
+    } else if (url.pathname.includes('/contact')) {
+        valueToPass = 'contact'
+    }
+
+    return { tabToSet: valueToPass };
+};
+
 const router = createBrowserRouter([
     {
-        path: '/',
-        element: <Navigate to="/home" replace state={{defaultActiveFromRedirect: 'home'}} />,
-    },
-    {
-        path: '/home',
-        element: <MainApp defaultActive='home' />,
+        id: 'main-app-id',
+        Component: MainApp,
+        loader: getActiveTab,
         errorElement: <ErrorPage />,
         children: [
+            {
+                index: true, // This makes it the default child route
+                element: <Navigate to="/home" replace />, // Redirect to /home
+            },
             {
                 path: '/home',
-                element: <Home />,
+                Component: Home,
             },
-        ],
-    },
-    {
-        path:'/gallery',
-        element: <MainApp defaultActive='gallery' />,
-        errorElement: <ErrorPage />,
-        children: [
             {
                 path: '/gallery',
-                element: <Gallery />,
-            }
-        ]
-    },
-    {
-        path:'/services',
-        element: <MainApp defaultActive='services' />,
-        errorElement: <ErrorPage />,
-        children: [
+                Component: Gallery,
+            },
             {
                 path: '/services',
-                element: <Services />,
-            }
-        ]
-    },
-    {
-        path:'/contact',
-        element: <MainApp defaultActive='contact' />,
-        errorElement: <ErrorPage />,
-        children: [
+                Component: Services,
+            },
             {
                 path: '/contact',
-                element: <Contact />,
-            }
+                Component: Contact,
+            },
         ]
-    },
+    }
 ]);
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <RouterProvider router={router}/>
+        <RouterProvider router={router}/>
   </StrictMode>,
 )
