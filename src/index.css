@@ -88,6 +88,10 @@
     --color-latte-400: #c5b4a5;
 }
 
+body, #root {
+    height: 100dvh;
+}
+
 :root {
     --radius-selector: 0.5rem;
     --radius-field: 0.5rem;
