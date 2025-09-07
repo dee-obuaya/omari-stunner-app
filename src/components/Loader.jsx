@@ -19,7 +19,7 @@ export default function Loader (props) {
     return (
         <div className="flex flex-col items-center justify-center justify-self-center h-96 space-y-0.5">
             {getLoader(size)}
-            <p className="text-base text-base-content font-niconne tracking-wider">{tip || 'Loading...'}</p>
+            <p className="text-base text-base-content font-niconne tracking-wider animate-pulse">{tip || 'Loading...'}</p>
         </div>
     );
 }

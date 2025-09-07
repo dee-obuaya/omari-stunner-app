@@ -10,6 +10,7 @@ export default function MainApp(props) {
     const { tabToSet } = useRouteLoaderData('main-app-id');
     const [activeTab, setActiveTab] = useState(tabToSet);
     const [loading, isLoading] = useState(true);
+    const [isVisible, setIsVisible] = useState(false);
     const isMounted = useRef(false);
     const location = useLocation();
 
@@ -26,12 +27,17 @@ export default function MainApp(props) {
         }
 
         isMounted.current = true;
+        let timer;
         if (isMounted.current) {
             isLoading(false);
+            timer = setTimeout(() => {
+                setIsVisible(true);
+            }, 750);
         };
 
         return () => {
             isMounted.current = false;
+            clearTimeout(timer);
         }
     }, [location.pathname]);
 
@@ -50,7 +56,7 @@ export default function MainApp(props) {
     loading ? (
         <Loader size='xl' />
     ) : (
-            <div className='h-max'>
+            <div className={ `h-max transition-all ease-in duration-700 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
                 {/* Header: name and navbar with tabs */}
                 <div id='header' className='bg-base-100 pb-1 space-y-3.5 lg:space-y-4.5 sticky top-0 z-20'>
                     <ThemeToggle />
