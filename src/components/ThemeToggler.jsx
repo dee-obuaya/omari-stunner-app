@@ -1,17 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function ThemeToggle() {
-    const [theme, setTheme] = useState(
-        window.matchMedia('(prefers-color-scheme: dark)').matches ? 'omari-dark' : 'omari'
-    );
+    const getInitialTheme = () => {
+        const storedTheme = localStorage.getItem('theme');
+        return storedTheme || window.matchMedia('(prefers-color-scheme: dark)').matches ? 'omari-dark' : 'omari';
+    };
+
+    const [theme, setTheme] = useState(getInitialTheme);
+
+    useEffect(() => {
+        setLocalStorageTheme(theme);
+    }, []);
 
     const handleToggle = (e) => {
         setTheme(e.target.checked ? 'omari-dark' : 'omari');
         setLocalStorageTheme(e.target.checked ? 'omari-dark' : 'omari');
     };
 
-    const setLocalStorageTheme = (theme) => {
-        localStorage.setItem('theme', theme);
+    const setLocalStorageTheme = (themeToSet) => {
+        localStorage.setItem('theme', themeToSet);
         const localTheme = localStorage.getItem('theme');
         document.querySelector('html')?.setAttribute('data-theme', localTheme);
     };
