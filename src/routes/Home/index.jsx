@@ -7,6 +7,7 @@ import Chinwe from '../../assets/images/Chinwe.jpg'
 export default function Home() {
     const [loadingHome, isLoadingHome] = useState(true);
     const [fetchingImages, setFetchingImages] = useState(false);
+    const [isVisible, setVisible] = useState(false);
     const [image, setImage] = useState(null);
     const isMounted = useRef(false);
 
@@ -14,16 +15,21 @@ export default function Home() {
         isMounted.current = true
         let timerId;
         let imageLoader;
+        let timer;
         if (isMounted.current) {
 
             timerId = setTimeout(() => {
                 isLoadingHome(false);
                 setFetchingImages(true);
 
-                imageLoader = setTimeout(() => {
-                    setImage(Chinwe);
-                    setFetchingImages(false);
-                }, 1500);
+                timer = setTimeout(() => {
+                    setVisible(true);
+
+                    imageLoader = setTimeout(() => {
+                        setImage(Chinwe);
+                        setFetchingImages(false);
+                    }, 750);
+                }, 200);
             }, 1000);
 
         };
@@ -32,6 +38,7 @@ export default function Home() {
             isMounted.current = false;
             clearTimeout(imageLoader);
             clearTimeout(timerId);
+            clearTimeout(timer);
         };
     }, []);
 
@@ -40,7 +47,7 @@ export default function Home() {
             <Loader size='xl' tip="Just a moment..."/>
         ) : (
             <>
-                <div className='my-8 space-y-10'>
+                <div className={`h-full pt-5 flex justify-center items-center space-y-10 transition-all ease-in duration-700 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
                     <div className='space-y-5'>
                         <div className='flex justify-self-center justify-center items-center w-fit rounded-t-full p-5 outline-dashed inset-shadow-2sm inset-shadow-current dark:outline-neutral'>
                             <div className={`transition-all transition-discrete duration-500 ${(fetchingImages) ? 'skeleton w-3xs h-96 rounded-t-full ease-out' : ''}`}>
@@ -48,7 +55,7 @@ export default function Home() {
                             </div>
                         </div>
 
-                        <div className='text-neutral-content text-center text-md tracking-widest mx-1.5'>
+                        <div className='grow text-neutral-content text-center text-md tracking-widest mx-1.5'>
                             <p className='font-italiana w-max mx-auto'>Ready to stun?</p>
                             <p className='font-niconne w-max mx-auto'>The making of beauty is art, and we are the artists.</p>
                         </div>
