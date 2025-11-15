@@ -56,7 +56,7 @@ export default function MainApp(props) {
     loading ? (
         <Loader size='xl' />
     ) : (
-            <div className={ `h-full flex flex-col transition-all ease-in duration-700 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
+            <div className={ `flex flex-col min-h-screen transition-all ease-in duration-700 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
                 {/* Header: name and navbar with tabs */}
                 <div id='header' className='bg-base-100 pb-1 space-y-3.5 lg:space-y-4.5 sticky top-0 z-20'>
                     <ThemeToggle />
@@ -65,13 +65,13 @@ export default function MainApp(props) {
                 </div>
 
                 {/* Content */}
-                <div id='content' className='h-9/12'>
+                <div id='content' className='grow overflow-y-auto mb-16'>
                     {/* The Outlet component renders the child routes */}
                     <Outlet />
                 </div>
 
                 {/* Footer: copyright */}
-                <div id='footer'>
+                <div id='footer' className='w-full bg-base-100'>
                     <Footer />
                 </div>
             </div>

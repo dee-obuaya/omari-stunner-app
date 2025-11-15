@@ -1,7 +1,8 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useRef } from 'react';
+import { motion } from 'motion/react';
 import Loader from '../../components/Loader';
-import Chinwe from '../../assets/images/Chinwe.jpg'
+import Chinwe from '../../../public/images/Chinwe.jpg';
 
 
 export default function Home() {
@@ -51,7 +52,14 @@ export default function Home() {
                     <div className='space-y-5'>
                         <div className='flex justify-self-center justify-center items-center w-fit rounded-t-full p-5 outline-dashed inset-shadow-2sm inset-shadow-current dark:outline-neutral'>
                             <div className={`transition-all transition-discrete duration-500 ${(fetchingImages) ? 'skeleton w-3xs h-96 rounded-t-full ease-out' : ''}`}>
-                                <img src={image} className={`w-3xs h-96 rounded-t-full shadow-2xl transition-all transition-discrete duration-500 ease-in ${(fetchingImages) ? 'opacity-0' : 'opacity-100'}`} alt='center-image' />
+                                <motion.img
+                                    src={image}
+                                    initial={{ scale: 0.8, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    transition={{ duration: 0.5, ease: 'easeInOut' }}
+                                    className={`w-3xs h-96 rounded-t-full shadow-2xl transition-all transition-discrete duration-500 ease-in ${(fetchingImages) ? 'opacity-0' : 'opacity-100'}`}
+                                    alt='center-image'
+                                />
                             </div>
                         </div>
 
