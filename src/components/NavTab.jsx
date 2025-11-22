@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
 import React, {useEffect, useState} from 'react';
+import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { API_BASE_URL } from '../constants/ServerUrl';
 
@@ -30,21 +31,26 @@ export default function NavTab(props) {
     return (
         <>
             {tabs && (
-                <div role="tablist" className="tabs tabs-lift tabs-sm md:tabs-lg lg:tabs-xl justify-center md:w-full font-italiana tracking-widest">
-                    {/* <span class="grow border-b border-base-300"></span> */}
+                <div role='tablist' className='tabs tabs-lift tabs-sm md:tabs-lg lg:tabs-xl justify-center md:w-full font-italiana tracking-widest'>
                     {tabs.map((tab, e) => (
                         tab.active &&
                         <Link
                             to={'/' + tab.name}
                             key={tab.name}
-                            role="tab"
-                            className={`tab${(tab.name === activeTab) ? ' tab-active' : ''} ${tab.name}-tab`}
+                            role='tab'
+                            className={`tab${(tab.name === activeTab) ? ' tab-active relative' : ''} ${tab.name}-tab`}
                             onClick={() => onTabChange(tab.name)}
                         >
                             {tab.label}
+
+                            {(tab.name === activeTab) && (
+                                <motion.div
+                                    layoutId='tabHighlight'
+                                    className='absolute inset-0 bg-primary/0 rounded-lg -z-10'
+                                />
+                            )}
                         </Link>
                     ))}
-                    {/* <span class="grow border-b border-base-300"></span> */}
                 </div>
             )}
         </>
