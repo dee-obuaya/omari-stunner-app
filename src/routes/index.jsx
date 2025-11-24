@@ -65,7 +65,12 @@ export default function MainApp(props) {
                     {/* Header: name and navbar with tabs */}
                     <div id='header' className='bg-base-100 pb-1 space-y-3.5 lg:space-y-4.5 sticky top-0 z-20'>
                         <ThemeToggle />
-                        <p className='font-italiana uppercase text-2xl lg:text-4xl tracking-[.20em] w-full pl-8 mx-auto text-start'>Omari Stunner</p>
+                        <p className='font-italiana uppercase text-2xl tracking-[.20em] w-full md:pl-8 mx-auto text-center md:text-start font-medium'>
+                            <span className='font-niconne text-5xl font-extralight'>O</span>mari <span className='font-niconne text-5xl font-extralight'>S</span>tunner
+                        </p>
+                        {/* <p className='font-italiana uppercase text-2xl lg:text-4xl tracking-[.20em] w-full pl-8 mx-auto text-start'>
+                            Omari Stunner
+                        </p> */}
                         <NavTab activeTab={activeTab} onTabChange={handleTabChange}/>
                     </div>
 

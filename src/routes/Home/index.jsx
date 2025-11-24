@@ -45,14 +45,14 @@ export default function Home() {
             <Loader size='xl' tip="Just a moment..."/>
         ) : (
             <>
-                <div className={`h-full pt-8 flex justify-center items-center space-y-10 transition-all ease-in duration-700 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
+                <div className={`h-full md:h-180 lg:h-full pt-8 flex justify-center items-center space-y-10 transition-all ease-in duration-700 ${isVisible ? 'opacity-100 overflow-x-hidden' : 'opacity-0'}`}>
                     <div className='space-y-5'>
                         <motion.div
                             animate={{ y: [ -20, 0, -20 ] }}
                             transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
                             className='flex justify-self-center justify-center items-center w-fit rounded-t-full p-5 outline-dashed inset-shadow-2sm inset-shadow-current dark:outline-neutral'
                         >
-                            <div className={`transition-all transition-discrete duration-500 ${(fetchingImages) ? 'skeleton w-3xs h-96 rounded-t-full ease-out' : ''}`}>
+                            <div className={`transition-all transition-discrete duration-500 rounded-t-full ${(fetchingImages) ? 'skeleton w-3xs h-96 ease-out' : 'hover:scale-105 hover:shadow-2xl'}`}>
                                 <motion.img
                                     src='/images/Chinwe.jpg'
                                     initial={{ scale: 0, opacity: 0 }}
