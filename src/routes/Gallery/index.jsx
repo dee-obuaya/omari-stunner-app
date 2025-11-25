@@ -5,9 +5,6 @@ import Loader from '../../components/Loader';
 import { motion } from 'motion/react';
 import { API_BASE_URL } from '../../constants/ServerUrl';
 import cld from '../../utils/cloudinary';
-import { i } from 'motion/react-client';
-import { quality } from '@cloudinary/url-gen/actions/delivery';
-import { crop } from '@cloudinary/url-gen/actions/resize';
 
 
 
