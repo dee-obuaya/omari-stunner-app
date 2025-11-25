@@ -53,7 +53,7 @@ export default function Contact() {
 		name: '',
 		email: '',
 		phone: '',
-		message: '',
+		body: '',
 	});
 
 	useEffect(() => {
@@ -82,15 +82,45 @@ export default function Contact() {
 			setMessageInfo({ ...messageInfo, email: value });
 		if (name === 'message[phone]')
 			setMessageInfo({ ...messageInfo, phone: value });
-		if (name === 'message[message]')
-			setMessageInfo({ ...messageInfo, message: value });
+		if (name === 'message[body]')
+			setMessageInfo({ ...messageInfo, body: value });
 	};
 
-	const handleSubmit = async (e) => {
+	const handleSubmit = async (e, data) => {
 		e.preventDefault();
 
 		// Submit messageInfo to the server or handle it as needed
-		console.log('Message submitted:', messageInfo);
+		console.log('Submitting message:', messageInfo);
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/messages`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message: messageInfo }),
+                credentials: 'include',
+            });
+
+            const responseData = await res.json();
+
+            if (!res.ok) {
+                console.log('Failed to submit message:', responseData);
+                // show alert or notification to user
+                return;
+            }
+
+            if (responseData.data) {
+                console.log('Message submitted successfully:', responseData.data);
+                // show success alert or notification to user
+            } else {
+                console.log('Unexpected response:', responseData);
+                // show alert or notification to user
+            }
+        } catch (error) {
+            console.error('Error submitting message:', error);
+            // show alert or notification to user
+        }
 	};
 
 	if (loading) {
@@ -195,6 +225,7 @@ export default function Contact() {
                                     className='input'
                                     placeholder='Name'
                                     name='message[name]'
+                                    onChange={handleChange}
                                 />
 
 								<label className='label'>Email</label>
@@ -203,6 +234,7 @@ export default function Contact() {
 									className='input validator'
 									placeholder='name@gamil.com'
                                     name='message[email]'
+                                    onChange={handleChange}
                                     required
 								/>
                                 <div className='validator-hint hidden'>Enter a valid email address</div>
@@ -213,13 +245,15 @@ export default function Contact() {
 									className='input'
 									placeholder='Phone number'
                                     name='message[phone]'
+                                    onChange={handleChange}
 								/>
 
                                 <label className='label'>Message</label>
                                 <textarea
                                     className='textarea h-24'
                                     placeholder='Your message...'
-                                    name='message[message]'
+                                    name='message[body]'
+                                    onChange={handleChange}
                                 ></textarea>
 
 								<motion.button
