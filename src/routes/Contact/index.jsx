@@ -120,6 +120,13 @@ export default function Contact() {
         } catch (error) {
             console.error('Error submitting message:', error);
             // show alert or notification to user
+        } finally {
+            setMessageInfo({
+                name: '',
+                email: '',
+                phone: '',
+                body: '',
+            })
         }
 	};
 
