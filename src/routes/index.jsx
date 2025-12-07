@@ -6,6 +6,7 @@ import ThemeToggle from '../components/ThemeToggler';
 import NavTab from '../components/NavTab';
 import Footer from '../components/Footer';
 import Loader from '../components/Loader';
+import ChatWidget from '../components/chat/ChatWIdget';
 
 export default function MainApp(props) {
     const { tabToSet } = useRouteLoaderData('main-app-id');
@@ -78,6 +79,7 @@ export default function MainApp(props) {
                     <motion.div layout id='content' className='grow overflow-y-auto mb-8'>
                         {/* The Outlet component renders the child routes */}
                         <Outlet />
+                        <ChatWidget />
                     </motion.div>
 
                     {/* Footer: copyright */}
