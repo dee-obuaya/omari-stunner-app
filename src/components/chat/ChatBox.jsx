@@ -1,9 +1,8 @@
-/* eslint-disable no-unused-vars */
 import { useEffect, useState, useRef } from 'react';
 import { API_BASE_URL } from '../../constants/ServerUrl';
 
 export default function ChatBox({socket, sessionId, onClose}) {
-    const [messages, setMessages] = useState({});
+    const [messages, setMessages] = useState([]);
     const [text, setText] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const bottomRef = useRef();
@@ -37,7 +36,9 @@ export default function ChatBox({socket, sessionId, onClose}) {
         socket.on('typing', (data) => {
             if (data.senderType === 'admin' || data.senderType === 'employee') {
                 setIsTyping(true);
-                setTimeout(() => setIsTyping(false), 1500);
+                bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+
+                setTimeout(() => setIsTyping(false), 5000);
             }
         });
 
@@ -60,7 +61,11 @@ export default function ChatBox({socket, sessionId, onClose}) {
 
     // auto scroll
     useEffect(() => {
-        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+        // small delay so scroll happens after layout settles
+        const t = setTimeout(() => {
+            bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }, 60);
+        return () => clearTimeout(t);
     }, [messages]);
 
     // send message
@@ -79,12 +84,12 @@ export default function ChatBox({socket, sessionId, onClose}) {
     };
 
     function handleTyping(e) {
-        setText(e.target.value);
-
         socket.emit('typing', {
             sessionId,
             senderType: 'visitor'
         });
+
+        setText(e.target.value);
     };
 
     function groupMessages(msgs) {
@@ -137,20 +142,6 @@ export default function ChatBox({socket, sessionId, onClose}) {
 
             {/* Messages */}
             <div className='flex-1 overflow-y-auto p-3 space-y-2 bg-neutral/40 dark:bg-base-300/85 h-full'>
-                {/* {messages.length > 0 && messages.map((m) => (
-                    <div className={`chat ${m.senderType === 'visitor' ? 'chat-end' : 'chat-start'}`}>
-                        <div className='chat-bubble'>
-                            {m.message}
-                        </div>
-                        {m.senderType === 'visitor' && (
-                            <div className='chat-footer opacity-50'>
-                                {m.status == 'sent' && 'Sent'}
-                                {m.status == 'delivered' && 'Delivered'}
-                                {m.status == 'seen' && 'Seen'}
-                            </div>
-                        )}
-                    </div>
-                ))} */}
 
                 {grouped.map((group, i) => (
                     <div key={i}>
@@ -181,7 +172,7 @@ export default function ChatBox({socket, sessionId, onClose}) {
 
 
                 {isTyping && (
-                    <div className="text-sm text-gray-500 italic px-2">
+                    <div className='text-sm text-gray-500 italic p-4'>
                         Admin is typing...
                     </div>
                 )}
