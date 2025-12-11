@@ -7,6 +7,7 @@ export default function ChatBox({
     sessionId,
     messages = [],
     isTyping,
+    adminOnline,
     onSend,
     onTyping,
     onClose,
@@ -70,6 +71,17 @@ export default function ChatBox({
             {/* Header */}
             <div className='bg-info/75 text-white p-3 flex justify-between items-center'>
                 <span className='font-semibold text-info-content font-libertinus tracking-wider'>Chat with Us</span>
+
+                {adminOnline ? (
+                    <span className="text-green-500 text-xs font-semibold">
+                        Online
+                    </span>
+                ) : (
+                    <span className="text-gray-400 text-xs">
+                        Offline
+                    </span>
+                )}
+
                 <button className='text-info-content' onClick={onClose}>
                     <svg
                         xmlns='http://www.w3.org/2000/svg'
