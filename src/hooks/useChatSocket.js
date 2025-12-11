@@ -193,7 +193,7 @@ export default function useChatSocket () {
         const handleNewMessage = msg => {
             if (msg.sessionId !== sessionIdRef.current) return;
 
-            console.log("📩 Received new message:", msg);
+            // console.log("📩 Received new message:", msg);
 
             setMessages(prev => {
                 const updated = [...prev, msg];
@@ -221,19 +221,25 @@ export default function useChatSocket () {
         };
 
         // --- message status ---
-        const handleStatus = ({ messageId, status }) => {
-            if (sessionId !== sessionIdRef.current) return;
+        const handleStatus = ({ sessionId: sid, messageIds = [], status }) => {
+            if (sid !== sessionIdRef.current) return;
+
+            // console.log("📥 Visitor received message:status event:", { sid, messageIds, status });
+
 
             setMessages(prev =>
                 prev.map(m =>
-                    m._id === messageId ? { ...m, status } : m
+                    m.senderType === 'visitor' && messageIds.includes(m._id.toString())
+                        ? {...m, status}
+                        : m
                 )
             );
         };
 
         // --- admin status ---
+
         const handleAdminStatus = ({ online }) => {
-            console.log('👨‍🦱 Admin online status changed: ', online);
+            // console.log('👨‍🦱 Admin online status changed: ', online);
             setAdminOnline(online);
         };
 
@@ -270,23 +276,6 @@ export default function useChatSocket () {
             senderType: 'visitor',
         });
     };
-
-
-    // ------ send message ------
-    // const sendMessage = useCallback(
-    //     (e) => {
-    //         if (e) e.preventDefault();
-    //         if (!socket || !sessionRef.current || !text.trim()) return;
-
-    //         socket.emit('message:send', {
-    //             sessionId: sessionRef.current,
-    //             senderType: 'visitor',
-    //             message: text.trim()
-    //         })
-
-    //         setText('');
-    //     }, [socket]
-    // );
 
     // ------ control chat open/close
     const setChatOpen = (isOpen) => {
