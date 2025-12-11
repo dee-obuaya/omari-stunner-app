@@ -53,6 +53,7 @@ export default function useChatSocket () {
     const [messages, setMessages] = useState([]);
     const [isTyping, setIsTyping] = useState(false);
     const [unread, setUnread] = useState(0);
+    const [adminOnline, setAdminOnline] = useState(false);
 
     const socketRef = useRef(null);
 
@@ -91,13 +92,24 @@ export default function useChatSocket () {
 
         socketRef.current = socket;
 
+        // debug helper
+        socket.onAny((event, payload) => {
+            console.debug('SOCKET EVENT:', event, payload);
+        });
 
         socket.on('connect', async () => {
             console.log('Visitor connected: ', socket.id);
 
+            // NEW GUARD: ensures the hook doesn’t double-run
+            if (sessionIdRef.current) {
+                console.log("⚠️ Session already restored, skipping re-init");
+                return;
+            }
+
             let existing = localStorage.getItem('chat_sessionId');
 
             if (existing) {
+                console.log("🔄 Restoring visitor session:", existing);
 
                 sessionIdRef.current = existing;
                 setSessionId(existing);
@@ -107,6 +119,7 @@ export default function useChatSocket () {
                     userAgent: navigator.userAgent
                 });
             } else {
+                console.log("✨ Creating a new visitor session...");
                 const newId = await startNewChat();
 
                 socket.emit('user:join', {
@@ -124,39 +137,63 @@ export default function useChatSocket () {
         // PERMANENT LISTENER — server responds with final sessionId
         // ------------------------------------------------
         socket.on('user:sessionId', async ({ sessionId }) => {
+            console.log('📌 Final session ID from server:', sessionId);
+
+            if (!sessionId) return;
 
             sessionIdRef.current = sessionId;
             setSessionId(sessionId);
             localStorage.setItem('chat_sessionId', sessionId);
-
-            // load message history after session is confirmed
-            const res = await fetch(
-                `${API_BASE_URL}/api/chats/visitor/${sessionId}/messages`,
-                { credentials: 'include' }
-            );
-
-            const data = await res.json();
-
-            setMessages(data.messages || []);
         });
 
-        return () => socket.disconnect();
+        return () => {
+            if (socket.connected || socket.connecting) {
+                console.log("%c🧹 Cleanup: disconnecting socket", "color: orange");
+                socket.disconnect();
+            } else {
+                console.log("%c🧹 Cleanup: socket not connected, skipping", "color: gray");
+            }
+        };
+
     }, []);
+
+    // --------------------------------------------------
+    // Load history *WHEN* sessionId becomes available
+    // --------------------------------------------------
+    useEffect(() => {
+        if (!sessionId) return;
+
+        console.log('Loading history for: ', sessionId);
+
+        // load message history after session is confirmed
+        fetch(
+            `${API_BASE_URL}/api/chats/visitor/${sessionId}/messages`,
+            { credentials: 'include' }
+        )
+            .then(res => res.json())
+            .then(data => {
+                console.log('History loaded: ', data.messages);
+                setMessages(data.messages || []);
+            })
+            .catch(err => console.error('History error: ', err));
+    }, [sessionId]);
 
 
     // ---------------------------------
     // Socket Listeners
     // ---------------------------------
-
     useEffect(() => {
         const socket = socketRef.current;
         if (!socket) return;
+        if (!socket.connected) return;
         if (!sessionId) return;
 
 
         // --- new message ---
         const handleNewMessage = msg => {
             if (msg.sessionId !== sessionIdRef.current) return;
+
+            console.log("📩 Received new message:", msg);
 
             setMessages(prev => {
                 const updated = [...prev, msg];
@@ -185,6 +222,8 @@ export default function useChatSocket () {
 
         // --- message status ---
         const handleStatus = ({ messageId, status }) => {
+            if (sessionId !== sessionIdRef.current) return;
+
             setMessages(prev =>
                 prev.map(m =>
                     m._id === messageId ? { ...m, status } : m
@@ -192,14 +231,22 @@ export default function useChatSocket () {
             );
         };
 
+        // --- admin status ---
+        const handleAdminStatus = ({ online }) => {
+            console.log('👨‍🦱 Admin online status changed: ', online);
+            setAdminOnline(online);
+        };
+
         socket.on('message:new', handleNewMessage);
         socket.on('typing', handleTyping);
         socket.on('message:status', handleStatus);
+        socket.on('admin:status', handleAdminStatus);
 
         return () => {
             socket.off('message:new', handleNewMessage);
             socket.off('typing', handleTyping);
             socket.off('message:status', handleStatus);
+            socket.off('admin:status', handleAdminStatus);
         };
     }, [sessionId]);
 
@@ -255,7 +302,7 @@ export default function useChatSocket () {
         messages,
         isTyping,
         unread,
-        // bottomRef,
+        adminOnline,
 
         // exposed actions
         sendMessage,
