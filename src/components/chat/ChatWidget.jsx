@@ -9,63 +9,13 @@ export default function ChatWidget() {
         messages,
         unread,
         isTyping,
+        adminOnline,
         sendMessage,
         sendTyping,
         setChatOpen,
     } = useChatSocket();
 
     const [isOpen, setIsOpen] = useState(false);
-    // const [socket, setSocket] = useState(null);
-    // const [ sessionId, setSessionId] = useState(null);
-
-    // load existing session or create new one
-    // useEffect(() => {
-    //     const existing = localStorage.getItem('chat_sessionId');
-    //     if (existing) setSessionId(existing);
-    // }, []);
-
-    // init socket when sessionId exists
-    // useEffect(() => {
-    //     if (!sessionId) return;
-
-    //     const s = io(SOCKET_URL, {
-    //         query: {sessionId},
-    //         transports: ['websocket'],
-    //     });
-
-    //     s.on('connect', () => {
-    //         console.log('Emitting user:join', sessionId);
-    //         s.emit('user:join', {
-    //             sessionId,
-    //             userAgent: navigator.userAgent,
-    //         });
-    //     });
-
-    //     s.on('user:sessionId', ({sessionId: newId }) => {
-    //         console.log('received sessionId: ', newId);
-    //         setSessionId(newId);
-    //         localStorage.setItem('chat_sessionId', newId);
-    //     })
-
-    //     setSocket(s);
-
-    //     return () => s.disconnect();
-    // }, [sessionId]);
-
-    // create new session from api
-    // const startNewChat = async () => {
-    //     const res = await fetch(`${API_BASE_URL}/api/chats/visitor/start`, {
-    //         method: 'POST',
-    //         headers: {'Content-Type': 'application/json'},
-    //         credentials: 'include',
-    //     });
-
-    //     const data = await res.json();
-    //     console.log(data)
-    //     setSessionId(data.sessionId);
-    //     localStorage.setItem('chat_sessionId', data.sessionId);
-    // };
-
     // click handler
     const toggleChat = async () => {
         const nowOpen = !isOpen;
@@ -75,7 +25,7 @@ export default function ChatWidget() {
     };
 
     useEffect(() => {
-        const audio = new Audio('../../../public/audio/chat_notification.mp3');
+        const audio = new Audio('/audio/chat_notification.mp3');
         // "Unlock" the audio on first gesture
         const unlock = () => {
             audio.play().catch(() => {});
@@ -123,6 +73,7 @@ export default function ChatWidget() {
                     onSend={sendMessage}
                     onTyping={sendTyping}
                     onClose={toggleChat}
+                    adminOnline={adminOnline}
                 />
             )}
         </>
