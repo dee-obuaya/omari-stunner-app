@@ -70,10 +70,6 @@ export default function ChatWidget() {
     const toggleChat = async () => {
         const nowOpen = !isOpen;
 
-        // if (nowOpen && !sessionId) {
-        //     await startNewChat();
-        // }
-
         setIsOpen(nowOpen);
         setChatOpen(nowOpen);
     };
