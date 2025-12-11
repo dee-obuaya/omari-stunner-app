@@ -1,95 +1,126 @@
+/* eslint-disable no-unused-vars */
 import { useEffect, useState, useRef } from 'react';
-import { API_BASE_URL } from '../../constants/ServerUrl';
+// import { API_BASE_URL } from '../../constants/ServerUrl';
+import useChatSocket from '../../hooks/useChatSocket';
 
-export default function ChatBox({socket, sessionId, onClose}) {
-    const [messages, setMessages] = useState([]);
+export default function ChatBox({
+    sessionId,
+    messages = [],
+    isTyping,
+    onSend,
+    onTyping,
+    onClose,
+}) {
+    const bottomRef = useRef(null);
     const [text, setText] = useState('');
-    const [isTyping, setIsTyping] = useState(false);
-    const bottomRef = useRef();
+
+    // const [messages, setMessages] = useState([]);
+    // const [isTyping, setIsTyping] = useState(false);
+    // const bottomRef = useRef();
 
     // load session message history
-    useEffect(() => {
-        async function loadHistory() {
-            const res = await fetch(`${API_BASE_URL}/api/chats/visitor/${sessionId}/messages`, {credentials: 'include'});
-            const data = await res.json();
+    // useEffect(() => {
+    //     async function loadHistory() {
+    //         const res = await fetch(`${API_BASE_URL}/api/chats/visitor/${sessionId}/messages`, {credentials: 'include'});
+    //         const data = await res.json();
 
-            setMessages(data.messages || []);
-        };
+    //         setMessages(data.messages || []);
+    //     };
 
-        loadHistory();
-    }, [sessionId])
+    //     loadHistory();
+    // }, [sessionId])
 
     // listen for incoming messages
-    useEffect(() => {
-        if (!socket || !sessionId) return;
+    // useEffect(() => {
+    //     if (!socket || !sessionId) return;
 
-        socket.on('message:new', (msg) => {
-            setMessages((p) => [...p, msg]);
-        });
+    //     socket.on('message:new', (msg) => {
+    //         setMessages((p) => [...p, msg]);
+    //     });
 
-        return () => socket.off('message:new');
-    }, [socket, sessionId]);
+    //     return () => socket.off('message:new');
+    // }, [socket, sessionId]);
 
-    useEffect(() => {
-        if (!socket) return;
+    // useEffect(() => {
+    //     if (!socket) return;
 
-        socket.on('typing', (data) => {
-            if (data.senderType === 'admin' || data.senderType === 'employee') {
-                setIsTyping(true);
-                bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    //     socket.on('typing', (data) => {
+    //         if (data.senderType === 'admin' || data.senderType === 'employee') {
+    //             setIsTyping(true);
+    //             bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
 
-                setTimeout(() => setIsTyping(false), 5000);
-            }
-        });
+    //             setTimeout(() => setIsTyping(false), 5000);
+    //         }
+    //     });
 
-        return () => socket.off('typing');
-    }, [socket]);
+    //     return () => socket.off('typing');
+    // }, [socket]);
 
-    useEffect(() => {
-        if (!socket) return;
+    // useEffect(() => {
+    //     if (!socket) return;
 
-        socket.on('message:status', ({ messageId, status}) => {
-            setMessages(prev => {
-                prev.map(m =>
-                    m._id === messageId ? {...m, status} : m
-                )
-            });
-        });
+    //     socket.on('message:status', ({ messageId, status}) => {
+    //         setMessages(prev => {
+    //             prev.map(m =>
+    //                 m._id === messageId ? {...m, status} : m
+    //             )
+    //         });
+    //     });
 
-        return () => socket.off('message:status');
-    }, [socket]);
+    //     return () => socket.off('message:status');
+    // }, [socket]);
 
     // auto scroll
-    useEffect(() => {
-        // small delay so scroll happens after layout settles
-        const t = setTimeout(() => {
-            bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-        }, 60);
-        return () => clearTimeout(t);
-    }, [messages]);
+    // useEffect(() => {
+    //     // small delay so scroll happens after layout settles
+    //     const t = setTimeout(() => {
+    //         bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    //     }, 60);
+    //     return () => clearTimeout(t);
+    // }, [messages]);
 
     // send message
-    function sendMessage(e) {
+    // function sendMessage(e) {
+    //     e.preventDefault();
+    //     if(!text.trim()) return;
+
+    //     const payload = {
+    //         sessionId,
+    //         senderType: 'visitor',
+    //         message: text.trim(),
+    //     };
+
+    //     socket.emit('message:send', payload);
+    //     setText('');
+    // };
+
+    // function handleTyping(e) {
+    //     socket.emit('typing', {
+    //         sessionId,
+    //         senderType: 'visitor'
+    //     });
+
+    //     setText(e.target.value);
+    // };
+
+    // auto-scroll on new messages
+    useEffect(() => {
+        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages, isTyping]);
+
+    const handleSend = e => {
         e.preventDefault();
-        if(!text.trim()) return;
 
-        const payload = {
-            sessionId,
-            senderType: 'visitor',
-            message: text.trim(),
-        };
+        if (!text.trim()) return;
 
-        socket.emit('message:send', payload);
+        onSend(text.trim());
         setText('');
     };
 
-    function handleTyping(e) {
-        socket.emit('typing', {
-            sessionId,
-            senderType: 'visitor'
-        });
-
-        setText(e.target.value);
+    const handleTyping = e => {
+        const value = e.target.value;
+        setText(value);
+        onTyping();
     };
 
     function groupMessages(msgs) {
@@ -99,7 +130,8 @@ export default function ChatBox({socket, sessionId, onClose}) {
         msgs.length > 0 && msgs.forEach((msg) => {
             const date = new Date(msg.createdAt).toDateString();
 
-            const last = currentGroup?.messages[currentGroup.messages.length - 1];
+            const last = currentGroup?.messages.at(-1);
+            // [currentGroup.messages.length - 1]
 
             const sameSender = last?.senderType === msg.senderType;
             const sameDay = currentGroup?.date === date;
@@ -151,7 +183,10 @@ export default function ChatBox({socket, sessionId, onClose}) {
                         </div>
 
                         {group.messages.map((m) => (
-                            <div className={`chat ${m.senderType === 'visitor' ? 'chat-end' : 'chat-start'}`}>
+                            <div
+                                key={m._id}
+                                className={`chat ${m.senderType === 'visitor' ? 'chat-end' : 'chat-start'}`}
+                            >
                                 <div className='chat-bubble'>
                                     {m.message}
                                 </div>
@@ -172,7 +207,7 @@ export default function ChatBox({socket, sessionId, onClose}) {
 
 
                 {isTyping && (
-                    <div className='text-sm text-gray-500 italic p-4'>
+                    <div className='italic text-sm text-gray-500 px-2'>
                         Admin is typing...
                     </div>
                 )}
@@ -181,7 +216,7 @@ export default function ChatBox({socket, sessionId, onClose}) {
             </div>
 
             {/* Input */}
-            <form onSubmit={sendMessage} className='p-1.5 border-t flex gap-2'>
+            <form onSubmit={handleSend} className='p-1.5 border-t flex gap-2'>
                 <input
                     className='input flex-1 border rounded-md px-3 py-2 text-sm'
                     placeholder='Type a message...'
