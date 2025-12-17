@@ -60,6 +60,8 @@ export default function useChatSocket () {
     // tracks whether chat widget is open or minimized
     const isChatOpenRef = useRef(false);
 
+    const SENT_TIMEOUT = 8000;
+
     // ------------------------------------
     // Create new chat session
     // ------------------------------------
@@ -78,6 +80,23 @@ export default function useChatSocket () {
 
         return data.sessionId;
     };
+
+    useEffect(() => {
+        const pending = JSON.parse(
+            localStorage.getItem('pendingMessages') || '[]'
+        );
+
+        if (pending.length) {
+            setMessages(prev => {
+                const existingIds = new Set(prev.map(m => m.clientId));
+                const restored = pending.filter(
+                    m => !existingIds.has(m.clientId)
+                );
+                return [...restored, ...prev];
+            });
+        }
+    }, []);
+
 
     // ----------------------------------------------------
     // 1) INITIALIZE SOCKET — only runs once
@@ -100,33 +119,46 @@ export default function useChatSocket () {
         socket.on('connect', async () => {
             console.log('Visitor connected: ', socket.id);
 
-            // NEW GUARD: ensures the hook doesn’t double-run
-            if (sessionIdRef.current) {
-                console.log("⚠️ Session already restored, skipping re-init");
-                return;
+            // ------ session restoration/creation ------
+            if (!sessionIdRef.current) {
+                // restore/create session
+                let existing = localStorage.getItem('chat_sessionId');
+
+                if (existing) {
+                    // console.log("🔄 Restoring visitor session:", existing);
+
+                    sessionIdRef.current = existing;
+                    setSessionId(existing);
+
+                    socket.emit('user:join', {
+                        sessionId: existing,
+                        userAgent: navigator.userAgent
+                    });
+                } else {
+                    // console.log("✨ Creating a new visitor session...");
+                    const newId = await startNewChat();
+
+                    socket.emit('user:join', {
+                        sessionId: newId,
+                        userAgent: navigator.userAgent
+                    });
+                }
             }
 
-            let existing = localStorage.getItem('chat_sessionId');
-
-            if (existing) {
-                console.log("🔄 Restoring visitor session:", existing);
-
-                sessionIdRef.current = existing;
-                setSessionId(existing);
-
-                socket.emit('user:join', {
-                    sessionId: existing,
-                    userAgent: navigator.userAgent
+            // flush pending messages safely
+            setMessages(prev => {
+                prev.forEach(msg => {
+                    if (
+                        (msg.status === 'sent' || msg.status === 'failed' || msg.status === 'slow') &&
+                        !msg.inFlight &&
+                        msg.clientId
+                    ) {
+                        emitMessage(msg);
+                    }
                 });
-            } else {
-                console.log("✨ Creating a new visitor session...");
-                const newId = await startNewChat();
 
-                socket.emit('user:join', {
-                    sessionId: newId,
-                    userAgent: navigator.userAgent
-                });
-            }
+                return prev;
+            });
         });
 
         socket.on('disconnect', () => {
@@ -163,7 +195,7 @@ export default function useChatSocket () {
     useEffect(() => {
         if (!sessionId) return;
 
-        console.log('Loading history for: ', sessionId);
+        // console.log('Loading history for: ', sessionId);
 
         // load message history after session is confirmed
         fetch(
@@ -172,8 +204,29 @@ export default function useChatSocket () {
         )
             .then(res => res.json())
             .then(data => {
-                console.log('History loaded: ', data.messages);
-                setMessages(data.messages || []);
+                // console.log('History loaded: ', data.messages);
+                // setMessages(data.messages || []);
+
+                setMessages(prev => {
+                    const serverMessages = data.messages || [];
+
+                    const pending = prev.filter(
+                        m =>
+                            m.status === 'sent' ||
+                            m.status === 'failed' ||
+                            m.status === 'slow'
+                    );
+
+                    const serverClientIds = new Set(
+                        serverMessages.map(m => m.clientId).filter(Boolean)
+                    );
+
+                    const stillPending = pending.filter(
+                        m => !serverClientIds.has(m.clientId)
+                    );
+
+                    return [...serverMessages, ...stillPending];
+                });
             })
             .catch(err => console.error('History error: ', err));
     }, [sessionId]);
@@ -196,15 +249,42 @@ export default function useChatSocket () {
             // console.log("📩 Received new message:", msg);
 
             setMessages(prev => {
-                const updated = [...prev, msg];
-                return updated;
+                // reconciliation path
+                if (msg.clientId) {
+                    const index = prev.findIndex(
+                        m => m.clientId && m.clientId === msg.clientId
+                    );
+
+                    if (index !== -1) {
+                        const updated = [...prev];
+                        // updated[index] = msg;
+                        updated[index] = {
+                            ...msg,
+                            inFlight: false, // delivery confirmed
+                            createdAt: prev[index].createdAt // preserve local timestamp
+                        };
+
+                        const pending = JSON.parse(localStorage.getItem('pendingMessages') || '[]');
+
+                        localStorage.setItem(
+                            'pendingMessages',
+                            JSON.stringify(
+                                pending.filter(m => m.clientId !== msg.clientId)
+                            )
+                        );
+
+                        return updated;
+                    }
+                }
+                // const updated = [...prev, msg];
+                return [...prev, msg];
             });
 
             // unread
             if (!isChatOpenRef.current) {
                 setUnread(u =>  u + 1);
 
-                if (msg.senderType !== 'visitor') {
+                if (msg.senderType !== 'visitor' && unread > 0) {
                     playNotification();
                 }
             }
@@ -256,15 +336,55 @@ export default function useChatSocket () {
         };
     }, [sessionId]);
 
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setMessages(prev =>
+                prev.map(m => {
+                    if (
+                        m.status === 'sent' &&
+                        Date.now() - new Date(m.createdAt).getTime() > SENT_TIMEOUT
+                    ) {
+                    return { ...m, status: 'failed' };
+                    }
+                    return m;
+                })
+            );
+        }, 2000); // lightweight polling
+
+        return () => clearInterval(timer);
+    }, []);
+
     // ------ send message ------
     const sendMessage = (txt) => {
         if (!txt.trim() || !sessionIdRef.current) return;
 
-        socketRef.current.emit('message:send',{
+        const clientId = crypto.randomUUID();
+
+        // optimistic message first (ui-first)
+        const optimisticMsg = {
+            _id: `local-${clientId}`, // temporary id
+            clientId,
             sessionId: sessionIdRef.current,
             senderType: 'visitor',
             message: txt.trim(),
-        });
+            status: 'sent',
+            // inFlight: true,
+            inFlight: false, // will be set to true when actually sending
+            createdAt: new Date().toISOString(),
+        };
+
+        setMessages(prev => [...prev, optimisticMsg]);
+
+        const pending = JSON.parse(localStorage.getItem('pendingMessages') || '[]');
+
+        localStorage.setItem(
+            'pendingMessages',
+            JSON.stringify([...pending, optimisticMsg])
+        );
+
+        // emit to server
+        emitMessage(optimisticMsg);
     };
 
     // ------ send typing indicator ------
@@ -284,6 +404,49 @@ export default function useChatSocket () {
         if (isOpen) setUnread(0);
     };
 
+    // retry failed messages logic
+    const retryMessage = (msg) => {
+        if (!socketRef.current || !sessionIdRef.current) return;
+        if (msg.inFlight) return;
+
+        // console.log("🔄 inside retryMessage:", msg);
+
+        // reset UI state
+        setMessages(prev =>
+            prev.map(m =>
+            m.clientId === msg.clientId
+                ? { ...m, status: 'sent', inFlight: false, createdAt: new Date().toISOString() }
+                : m
+            )
+        );
+
+        emitMessage(msg);
+    };
+
+    const emitMessage = (msg) => {
+        console.log("🚀 Emitting message: ", msg)
+        if (!socketRef.current || !socketRef.current.connected) return;
+        if (msg.inFlight) return; // 🔒 rule enforcement
+
+        // mark as in-flight BEFORE emitting
+        setMessages(prev =>
+            prev.map(m =>
+            m.clientId === msg.clientId
+                ? { ...m, inFlight: true }
+                : m
+            )
+        );
+
+        socketRef.current.emit('message:send', {
+            sessionId: msg.sessionId,
+            senderType: msg.senderType,
+            message: msg.message,
+            clientId: msg.clientId,
+        });
+    };
+
+
+
     return {
         socket: socketRef.current,
         // exposed state
@@ -298,5 +461,6 @@ export default function useChatSocket () {
         sendTyping,
         startNewChat,
         setChatOpen,
+        retryMessage,
     };
 }
