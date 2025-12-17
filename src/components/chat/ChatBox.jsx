@@ -1,7 +1,6 @@
 /* eslint-disable no-unused-vars */
 import { useEffect, useState, useRef } from 'react';
-// import { API_BASE_URL } from '../../constants/ServerUrl';
-import useChatSocket from '../../hooks/useChatSocket';
+import { motion } from 'motion/react';
 
 export default function ChatBox({
     sessionId,
@@ -11,9 +10,12 @@ export default function ChatBox({
     onSend,
     onTyping,
     onClose,
+    retryMessage,
 }) {
     const bottomRef = useRef(null);
     const [text, setText] = useState('');
+
+    const theme = document.documentElement.dataset.theme;
 
     // auto-scroll on new messages
     useEffect(() => {
@@ -73,11 +75,11 @@ export default function ChatBox({
                 <span className='font-semibold text-info-content font-libertinus tracking-wider'>Chat with Us</span>
 
                 {adminOnline ? (
-                    <span className="text-green-500 text-xs font-semibold">
+                    <span className='text-green-500 text-xs font-semibold'>
                         Online
                     </span>
                 ) : (
-                    <span className="text-gray-400 text-xs">
+                    <span className='text-gray-400 text-xs'>
                         Offline
                     </span>
                 )}
@@ -96,7 +98,7 @@ export default function ChatBox({
             </div>
 
             {/* Messages */}
-            <div className='flex-1 overflow-y-auto p-3 space-y-2 bg-neutral/40 dark:bg-base-300/85 h-full'>
+            <div className={`flex-1 overflow-y-auto p-3 space-y-2 h-full transition-colors duration-75 ease-in-out ${theme === 'omari-dark' ? 'bg-base-300/85' : 'bg-neutral/60'}`}>
 
                 {grouped.map((group, i) => (
                     <div key={i}>
@@ -110,16 +112,67 @@ export default function ChatBox({
                                 key={m._id}
                                 className={`chat ${m.senderType === 'visitor' ? 'chat-end' : 'chat-start'}`}
                             >
-                                <div className='chat-bubble'>
-                                    {m.message}
+                                <div className='chat-bubble pb-1.5'>
+                                    <p className={` transition-colors duration-75 ease-in-out ${theme === 'omari-dark' ? 'text-base-content' : 'text-accent-content'}`}>{m.message}</p>
                                 </div>
                                     <div className='chat-footer opacity-50'>
                                         {new Date(m.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         {m.senderType === 'visitor' &&
                                             <span className='ml-2 text-warning'>
-                                                {m.status == 'sent' && 'Sent'}
-                                                {m.status == 'delivered' && 'Delivered'}
-                                                {m.status == 'seen' && 'Seen'}
+                                                {m.status == 'sent' && (
+                                                    <svg
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        width="18" height="18" viewBox="0 0 24 24"
+                                                        fill="none" stroke="currentColor" strokeWidth="2"
+                                                        strokeLinecap="round" strokeLinejoin="round"
+                                                        className="lucide lucide-check-icon lucide-check"><path d="M20 6 9 17l-5-5"/>
+                                                    </svg>
+                                                )}
+                                                {m.status == 'delivered' && (
+                                                    <svg
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        width="18" height="18" viewBox="0 0 24 24"
+                                                        fill="none" stroke="currentColor" strokeWidth="2"
+                                                        strokeLinecap="round" strokeLinejoin="round"
+                                                        className="lucide lucide-check-check-icon lucide-check-check text-info"
+                                                    >
+                                                        <path d="M18 6 7 17l-5-5"/><path d="m22 10-7.5 7.5L13 16"/>
+                                                    </svg>
+                                                )}
+                                                {m.status == 'seen' && (
+                                                    <svg
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        width="18" height="18" viewBox="0 0 24 24"
+                                                        fill="none" stroke="currentColor" strokeWidth="2"
+                                                        strokeLinecap="round" strokeLinejoin="round"
+                                                        className="lucide lucide-eye-icon lucide-eye text-success"
+                                                    >
+                                                        <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/>
+                                                        <circle cx="12" cy="12" r="3"/>
+                                                    </svg>
+                                                )}
+                                                {m.status == 'failed' && (
+                                                    <motion.div
+                                                        onClick={() => {
+                                                            retryMessage(m);
+                                                        }}
+                                                        className='cursor-pointer'
+                                                        initial={{ scale: 1 }}
+                                                        whileHover={{ scale: 1.1 }}
+                                                    >
+                                                        <svg
+                                                            xmlns='http://www.w3.org/2000/svg'
+                                                            width='18' height='18' viewBox='0 0 24 24'
+                                                            fill='none' stroke='currentColor'
+                                                            strokeWidth='2' strokeLinecap='round'
+                                                            strokeLinejoin='round'
+                                                            className='lucide lucide-circle-alert-icon lucide-circle-alert text-error'
+                                                        >
+                                                            <circle cx='12' cy='12' r='10'/><line x1='12' x2='12' y1='8' y2='12'/>
+                                                            <line x1='12' x2='12.01' y1='16' y2='16'/>
+                                                        </svg>
+                                                    </motion.div>
+                                                )}
                                             </span>
                                         }
                                     </div>
