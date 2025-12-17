@@ -13,6 +13,7 @@ export default function ChatWidget() {
         sendMessage,
         sendTyping,
         setChatOpen,
+        retryMessage,
     } = useChatSocket();
 
     const [isOpen, setIsOpen] = useState(false);
@@ -74,6 +75,7 @@ export default function ChatWidget() {
                     onTyping={sendTyping}
                     onClose={toggleChat}
                     adminOnline={adminOnline}
+                    retryMessage={retryMessage}
                 />
             )}
         </>
