@@ -2,12 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import io from 'socket.io-client';
 import { API_BASE_URL, SOCKET_URL } from '../constants/ServerUrl';
 
-// const playNotification = () => {
-//     console.log("🔊 Trying to play notification sound...");
-//     const audio = new Audio('/chat-notification.mp3');
-//     audio.volume = 1.0;
-//     audio.play().catch(err => console.log("🚫 Audio play blocked:", err));
-// };
 
 function playNotification() {
     try {
@@ -29,24 +23,8 @@ function playNotification() {
     }
 }
 
-// function playNotification() {
-//     const AudioContext = window.AudioContext || window.webkitAudioContext;
-//     const ctx = new AudioContext();
-//     const gain = ctx.createGain();
-//     gain.gain.value = 3.0; // crank it up
-
-//     const audio = new Audio("/audio/chat_notification.mp3");
-
-//     const track = ctx.createMediaElementSource(audio);
-//     track.connect(gain).connect(ctx.destination);
-
-//     audio.play();
-// }
-
-
 
 export default function useChatSocket () {
-    // --- State ---
     const [sessionId, setSessionId] = useState(null);
     const sessionIdRef = useRef(null);
 
