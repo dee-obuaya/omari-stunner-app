@@ -64,15 +64,15 @@ export default function useChatSocket () {
             localStorage.getItem('pendingMessages') || '[]'
         );
 
-        if (pending.length) {
-            setMessages(prev => {
-                const existingIds = new Set(prev.map(m => m.clientId));
-                const restored = pending.filter(
-                    m => !existingIds.has(m.clientId)
-                );
-                return [...restored, ...prev];
-            });
-        }
+        if (!pending.length) return;
+
+        const restored = pending.map(m => ({
+            ...m,
+            inFlight: false, // 🔥 critical
+            status: 'sent',
+        }));
+
+        setMessages(prev => [...restored, ...prev]);
     }, []);
 
 
