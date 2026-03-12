@@ -118,62 +118,7 @@ export default function ChatBox({
                                     <div className='chat-footer opacity-50'>
                                         {new Date(m.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         {m.senderType === 'visitor' &&
-                                            <span className='ml-2 text-warning'>
-                                                {m.status == 'sent' && (
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        width="18" height="18" viewBox="0 0 24 24"
-                                                        fill="none" stroke="currentColor" strokeWidth="2"
-                                                        strokeLinecap="round" strokeLinejoin="round"
-                                                        className="lucide lucide-check-icon lucide-check"><path d="M20 6 9 17l-5-5"/>
-                                                    </svg>
-                                                )}
-                                                {m.status == 'delivered' && (
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        width="18" height="18" viewBox="0 0 24 24"
-                                                        fill="none" stroke="currentColor" strokeWidth="2"
-                                                        strokeLinecap="round" strokeLinejoin="round"
-                                                        className="lucide lucide-check-check-icon lucide-check-check text-info"
-                                                    >
-                                                        <path d="M18 6 7 17l-5-5"/><path d="m22 10-7.5 7.5L13 16"/>
-                                                    </svg>
-                                                )}
-                                                {m.status == 'seen' && (
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        width="18" height="18" viewBox="0 0 24 24"
-                                                        fill="none" stroke="currentColor" strokeWidth="2"
-                                                        strokeLinecap="round" strokeLinejoin="round"
-                                                        className="lucide lucide-eye-icon lucide-eye text-success"
-                                                    >
-                                                        <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/>
-                                                        <circle cx="12" cy="12" r="3"/>
-                                                    </svg>
-                                                )}
-                                                {m.status == 'failed' && (
-                                                    <motion.div
-                                                        onClick={() => {
-                                                            retryMessage(m);
-                                                        }}
-                                                        className='cursor-pointer'
-                                                        initial={{ scale: 1 }}
-                                                        whileHover={{ scale: 1.1 }}
-                                                    >
-                                                        <svg
-                                                            xmlns='http://www.w3.org/2000/svg'
-                                                            width='18' height='18' viewBox='0 0 24 24'
-                                                            fill='none' stroke='currentColor'
-                                                            strokeWidth='2' strokeLinecap='round'
-                                                            strokeLinejoin='round'
-                                                            className='lucide lucide-circle-alert-icon lucide-circle-alert text-error'
-                                                        >
-                                                            <circle cx='12' cy='12' r='10'/><line x1='12' x2='12' y1='8' y2='12'/>
-                                                            <line x1='12' x2='12.01' y1='16' y2='16'/>
-                                                        </svg>
-                                                    </motion.div>
-                                                )}
-                                            </span>
+                                            <span className='ml-2 text-warning'>{m.status === 'seen' ? 'Seen' : m.status === 'delivered' ? 'Delivered' : 'Sent'}</span>
                                         }
                                     </div>
                             </div>
