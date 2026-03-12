@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import {useEffect, useRef, useState} from 'react';
 import {io} from 'socket.io-client';
 import { API_BASE_URL } from '../constants/ServerUrl';
@@ -14,15 +15,14 @@ export default function useChatSocket() {
     const startSession = async () => {
         if (sessionId) return sessionId;
 
-        const res = await fetch(
-            `${API_BASE_URL}/api/chats/visitor/start`,
-            {
-                method: 'POST',
-                credentials: 'include'
-            }
-        );
+        const res = await fetch(`${API_BASE_URL}/api/chats/visitor/start`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            credentials: 'include',
+        });
+        const data = await res.json();
 
-        const newSessionId = res.data.sessionId;
+        const newSessionId = data.sessionId;
 
         setSessionId(newSessionId);
 
@@ -52,6 +52,7 @@ export default function useChatSocket() {
 
         socket.on('admin:status', (data) => {
             console.log('Admin status: ', data.online);
+            setAdminOnline(data.online);
         });
 
         socket.on('disconnect', () => {
