@@ -6,14 +6,8 @@ import ChatBox from './ChatBox';
 export default function ChatWidget() {
     const {
         sessionId,
-        messages,
-        unread,
-        isTyping,
         adminOnline,
-        sendMessage,
-        sendTyping,
-        setChatOpen,
-        retryMessage,
+        startSession,
     } = useChatSocket();
 
     const [isOpen, setIsOpen] = useState(false);
@@ -22,18 +16,32 @@ export default function ChatWidget() {
         const nowOpen = !isOpen;
 
         setIsOpen(nowOpen);
-        setChatOpen(nowOpen);
+
+        if (nowOpen && !sessionId) {
+            await startSession();
+        };
     };
 
+    const audioRef = useRef(null);
+    const prevUnreadRef = useRef(0);
+
     useEffect(() => {
-        const audio = new Audio('/audio/chat_notification.mp3');
+        audioRef.current = new Audio('/audio/chat_notification.mp3');
         // "Unlock" the audio on first gesture
         const unlock = () => {
-            audio.play().catch(() => {});
+            audioRef.current.play().catch(() => {});
             window.removeEventListener('click', unlock);
         };
         window.addEventListener('click', unlock);
     }, []);
+
+    // useEffect(() => {
+    //     if (unread > prevUnreadRef.current) {
+    //         audioRef.current.play().catch(() => {});
+    //     }
+
+    //     prevUnreadRef.current = unread;
+    // }, [unread]);
 
 
     return (
@@ -56,11 +64,11 @@ export default function ChatWidget() {
                             <path d='M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719'/>
                         </svg>
 
-                        {unread > 0 && sessionId && (
+                        {/* {unread > 0 && sessionId && (
                             <span className='absolute -top-1 -right-1 bg-red-600 text-white rounded-full text-xs px-1'>
                                 {unread}
                             </span>
-                        )}
+                        )} */}
                     </button>
                 )}
             </div>
@@ -69,13 +77,8 @@ export default function ChatWidget() {
             {isOpen && (
                 <ChatBox
                     sessionId={sessionId}
-                    messages={messages}
-                    isTyping={isTyping}
-                    onSend={sendMessage}
-                    onTyping={sendTyping}
-                    onClose={toggleChat}
                     adminOnline={adminOnline}
-                    retryMessage={retryMessage}
+                    onClose={toggleChat}
                 />
             )}
         </>
