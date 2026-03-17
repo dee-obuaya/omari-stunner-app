@@ -5,32 +5,18 @@ import { API_BASE_URL } from '../constants/ServerUrl';
 
 export default function useChatSocket() {
     const socketRef = useRef(null);
+    const sessionRef = useRef(null);
 
     const [sessionId, setSessionId] = useState(null);
     const [adminOnline, setAdminOnline] = useState(false);
-
-    // -----------------------------------------------
-    // Create session when chat opens
-    // -----------------------------------------------
-    const startSession = async () => {
-        if (sessionId) return sessionId;
-
-        const res = await fetch(`${API_BASE_URL}/api/chats/visitor/start`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            credentials: 'include',
-        });
-        const data = await res.json();
-
-        const newSessionId = data.sessionId;
-
-        setSessionId(newSessionId);
-
-        return newSessionId;
-    };
+    const [messages, setMessages] = useState([]);
 
     useEffect(() => {
-        if (!sessionId) return;
+        sessionRef.current = sessionId;
+    }, [sessionId]);
+
+    useEffect(() => {
+        // if (!sessionId) return;
 
         const socket = io(API_BASE_URL, {
             auth: { role: 'visitor' },
@@ -43,11 +29,23 @@ export default function useChatSocket() {
         socket.on('connect', () => {
             console.log('Visitor socket connected: ', socket.id);
 
-            socket.emit('user:join', { sessionId });
+            if (sessionId) socket.emit('user:join', { sessionId });
         });
 
         socket.on('user:joined', (data) => {
             console.log('Visitor joined session: ', data.sessionId);
+        });
+
+        socket.on('session:created', (data) => {
+            console.log('Session created: ', data.sessionId);
+
+            setSessionId(data.sessionId);
+
+            socket.emit('user:join', { sessionId: data.sessionId });
+        })
+
+        socket.on('chat:message', (msg) => {
+            setMessages(prev => [...prev, msg]);
         });
 
         socket.on('admin:status', (data) => {
@@ -62,12 +60,24 @@ export default function useChatSocket() {
         return () => {
             socket.disconnect();
         }
-    }, [sessionId]);
+    }, []);
+
+    const sendMessage = (message) => {
+        if (!socketRef.current) return;
+
+        console.log('(hook)Emitting message: ', message);
+
+        socketRef.current.emit('user:sendMessage', {
+            sessionId: sessionRef.current,
+            message
+        });
+    };
 
     return {
         socket: socketRef.current,
         sessionId,
         adminOnline,
-        startSession,
+        messages,
+        sendMessage,
     };
 }
