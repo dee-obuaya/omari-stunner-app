@@ -4,13 +4,10 @@ import { motion } from 'motion/react';
 
 export default function ChatBox({
     sessionId,
-    messages = [],
-    isTyping,
     adminOnline,
-    onSend,
-    onTyping,
     onClose,
-    retryMessage,
+    messages,
+    sendMessage,
 }) {
     const bottomRef = useRef(null);
     const [text, setText] = useState('');
@@ -18,23 +15,19 @@ export default function ChatBox({
     const theme = document.documentElement.dataset.theme;
 
     // auto-scroll on new messages
-    useEffect(() => {
-        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages, isTyping]);
+    // useEffect(() => {
+    //     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // }, [messages, isTyping]);
 
     const handleSend = e => {
         e.preventDefault();
 
+        console.log('sending message');
+
         if (!text.trim()) return;
 
-        onSend(text.trim());
+        sendMessage(text.trim());
         setText('');
-    };
-
-    const handleTyping = e => {
-        const value = e.target.value;
-        setText(value);
-        onTyping();
     };
 
     function groupMessages(msgs) {
@@ -47,12 +40,12 @@ export default function ChatBox({
             const last = currentGroup?.messages.at(-1);
             // [currentGroup.messages.length - 1]
 
-            const sameSender = last?.senderType === msg.senderType;
+            const sameSender = last?.sender === msg.sender;
             const sameDay = currentGroup?.date === date;
 
             if (!sameSender || !sameDay) {
                 currentGroup = {
-                    senderType: msg.senderType,
+                    sender: msg.sender,
                     date,
                     messages: []
                 };
@@ -110,14 +103,14 @@ export default function ChatBox({
                         {group.messages.map((m) => (
                             <div
                                 key={m._id}
-                                className={`chat ${m.senderType === 'visitor' ? 'chat-end' : 'chat-start'}`}
+                                className={`chat ${m.sender === 'visitor' ? 'chat-end' : 'chat-start'}`}
                             >
                                 <div className='chat-bubble pb-1.5'>
                                     <p className={` transition-colors duration-75 ease-in-out ${theme === 'omari-dark' ? 'text-base-content' : 'text-accent-content'}`}>{m.message}</p>
                                 </div>
                                     <div className='chat-footer opacity-50'>
                                         {new Date(m.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        {m.senderType === 'visitor' &&
+                                        {m.sender === 'visitor' &&
                                             <span className='ml-2 text-warning'>{m.status === 'seen' ? 'Seen' : m.status === 'delivered' ? 'Delivered' : 'Sent'}</span>
                                         }
                                     </div>
@@ -127,11 +120,11 @@ export default function ChatBox({
                 ))}
 
 
-                {isTyping && (
+                {/* {isTyping && (
                     <div className='italic text-sm text-gray-500 px-2'>
                         Admin is typing...
                     </div>
-                )}
+                )} */}
 
                 <div ref={bottomRef} />
             </div>
@@ -142,7 +135,7 @@ export default function ChatBox({
                     className='input flex-1 border rounded-md px-3 py-2 text-sm'
                     placeholder='Type a message...'
                     value={text}
-                    onChange={handleTyping}
+                    onChange={(e) => setText(e.target.value)}
                 />
 
                 <button
