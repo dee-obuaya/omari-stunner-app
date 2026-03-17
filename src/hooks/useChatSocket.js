@@ -53,6 +53,24 @@ export default function useChatSocket() {
             setAdminOnline(data.online);
         });
 
+        socket.on('message:status', ({ sessionId, status }) => {
+            setMessages(prev =>
+                prev.map(msg => {
+                    // if no sessionId provided (global delivery), apply to all visitor messages
+                    if (!sessionId && msg.sender === 'visitor') {
+                        return { ...msg, status };
+                    }
+
+                    // session-specific update (seen)
+                    if (msg.sessionId === sessionId && msg.sender === 'visitor') {
+                        return { ...msg, status };
+                    }
+
+                    return msg;
+                })
+            );
+        });
+
         socket.on('disconnect', () => {
             console.log('Visitor socket disconnected');
         });
