@@ -7,7 +7,8 @@ export default function ChatWidget() {
     const {
         sessionId,
         adminOnline,
-        startSession,
+        messages,
+        sendMessage,
     } = useChatSocket();
 
     const [isOpen, setIsOpen] = useState(false);
@@ -16,10 +17,6 @@ export default function ChatWidget() {
         const nowOpen = !isOpen;
 
         setIsOpen(nowOpen);
-
-        if (nowOpen && !sessionId) {
-            await startSession();
-        };
     };
 
     const audioRef = useRef(null);
@@ -79,6 +76,8 @@ export default function ChatWidget() {
                     sessionId={sessionId}
                     adminOnline={adminOnline}
                     onClose={toggleChat}
+                    messages={messages}
+                    sendMessage={sendMessage}
                 />
             )}
         </>
