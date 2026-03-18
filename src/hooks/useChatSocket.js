@@ -16,6 +16,14 @@ export default function useChatSocket() {
     }, [sessionId]);
 
     useEffect(() => {
+        if (!socketRef.current || !sessionId) return;
+
+        console.log('🔁 Joining room after sessionId set:', sessionId);
+
+        socketRef.current.emit('user:join', { sessionId });
+    }, [sessionId]);
+
+    useEffect(() => {
         // if (!sessionId) return;
 
         const socket = io(API_BASE_URL, {
@@ -29,7 +37,7 @@ export default function useChatSocket() {
         socket.on('connect', () => {
             console.log('Visitor socket connected: ', socket.id);
 
-            if (sessionId) socket.emit('user:join', { sessionId });
+            // if (sessionId) socket.emit('user:join', { sessionId });
         });
 
         socket.on('user:joined', (data) => {
@@ -41,7 +49,7 @@ export default function useChatSocket() {
 
             setSessionId(data.sessionId);
 
-            socket.emit('user:join', { sessionId: data.sessionId });
+            // socket.emit('user:join', { sessionId: data.sessionId });
         })
 
         socket.on('chat:message', (msg) => {
