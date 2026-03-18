@@ -53,13 +53,20 @@ export default function useChatSocket() {
         })
 
         socket.on('chat:message', (msg) => {
-            setMessages(prev => [...prev,
-                {
+            // prevent duplicate messages
+            setMessages(prev => {
+                const normalized = {
                     ...msg,
                     sessionId: msg.sessionId?.toString?.() || msg.sessionId,
                     status: msg.status || 'sent'
-                }
-            ]);
+                };
+
+                const exists = prev.some(m => m._id === normalized._id);
+
+                if (exists) return prev;
+
+                return [...prev, normalized];
+            });
         });
 
         socket.on('chat:history', (msgs) => {
