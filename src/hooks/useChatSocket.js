@@ -53,7 +53,25 @@ export default function useChatSocket() {
         })
 
         socket.on('chat:message', (msg) => {
-            setMessages(prev => [...prev, msg]);
+            setMessages(prev => [...prev,
+                {
+                    ...msg,
+                    sessionId: msg.sessionId?.toString?.() || msg.sessionId,
+                    status: msg.status || 'sent'
+                }
+            ]);
+        });
+
+        socket.on('chat:history', (msgs) => {
+            console.log('📜 Visitor history:', msgs);
+
+            const normalized = msgs.map(msg => ({
+                ...msg,
+                sessionId: msg.sessionId?.toString?.() || msg.sessionId,
+                status: msg.status || 'sent'
+            }));
+
+            setMessages(normalized);
         });
 
         socket.on('admin:status', (data) => {
@@ -62,19 +80,29 @@ export default function useChatSocket() {
         });
 
         socket.on('message:status', ({ sessionId, status }) => {
+            const statusPriority = {
+                sent: 1,
+                delivered: 2,
+                seen: 3
+            };
+
             setMessages(prev =>
                 prev.map(msg => {
-                    // if no sessionId provided (global delivery), apply to all visitor messages
-                    if (!sessionId && msg.sender === 'visitor') {
-                        return { ...msg, status };
-                    }
+                    if (msg.sender !== 'visitor') return msg;
 
-                    // session-specific update (seen)
-                    if (msg.sessionId === sessionId && msg.sender === 'visitor') {
-                        return { ...msg, status };
-                    }
+                    const isSameSession = sessionId
+                        ? msg.sessionId === sessionId
+                        : true;
 
-                    return msg;
+                    if (!isSameSession) return msg;
+
+                    const current = statusPriority[msg.status] || 0;
+                    const incoming = statusPriority[status] || 0;
+
+                    // 🚫 block downgrade
+                    if (incoming < current) return msg;
+
+                    return { ...msg, status };
                 })
             );
         });
