@@ -34,7 +34,7 @@ export default function ChatBox({
         const groups = [];
         let currentGroup = null;
 
-        msgs.length > 0 && msgs.forEach((msg) => {
+        msgs?.length > 0 && msgs?.forEach((msg) => {
             const date = new Date(msg.createdAt).toDateString();
 
             const last = currentGroup?.messages.at(-1);
@@ -102,7 +102,7 @@ export default function ChatBox({
 
                         {group.messages.map((m) => (
                             <div
-                                key={m._id}
+                                key={m._id || m.createdAt}
                                 className={`chat ${m.sender === 'visitor' ? 'chat-end' : 'chat-start'}`}
                             >
                                 <div className='chat-bubble pb-1.5'>
