@@ -12,6 +12,13 @@ export default function useChatSocket() {
     const [messages, setMessages] = useState([]);
 
     useEffect(() => {
+        const savedSession = localStorage.getItem('chat_session_id');
+        if (savedSession) {
+            setSessionId(savedSession);
+        }
+    }, []);
+
+    useEffect(() => {
         sessionRef.current = sessionId;
     }, [sessionId]);
 
@@ -37,7 +44,12 @@ export default function useChatSocket() {
         socket.on('connect', () => {
             console.log('Visitor socket connected: ', socket.id);
 
-            // if (sessionId) socket.emit('user:join', { sessionId });
+            const savedSession = localStorage.getItem('chat_session_id');
+            if (savedSession) {
+                console.log('Rejoining existing session: ', savedSession);
+
+                setSessionId(savedSession);
+            }
         });
 
         socket.on('user:joined', (data) => {
@@ -47,12 +59,20 @@ export default function useChatSocket() {
         socket.on('session:created', (data) => {
             console.log('Session created: ', data.sessionId);
 
+            localStorage.setItem('chat_session_id', data.sessionId);
             setSessionId(data.sessionId);
 
             // socket.emit('user:join', { sessionId: data.sessionId });
         })
 
         socket.on('chat:message', (msg) => {
+            if (!sessionRef.current && msg.sessionId) {
+                console.log('💾 Backfilling sessionId:', msg.sessionId);
+
+                localStorage.setItem('chat_session_id', msg.sessionId);
+                setSessionId(msg.sessionId);
+            }
+
             // prevent duplicate messages
             setMessages(prev => {
                 const normalized = {
@@ -62,6 +82,14 @@ export default function useChatSocket() {
                 };
 
                 const exists = prev.some(m => m._id === normalized._id);
+                // const exists = prev.some(m =>
+                //     m._id === normalized._id ||
+                //     (
+                //         m.message === normalized.message &&
+                //         m.createdAt === normalized.createdAt &&
+                //         m.sender === normalized.sender
+                //     )
+                // );
 
                 if (exists) return prev;
 
@@ -127,9 +155,16 @@ export default function useChatSocket() {
         if (!socketRef.current) return;
 
         console.log('(hook)Emitting message: ', message);
+        const currentSession = sessionRef.current;
+
+        // user sent messages were not displaying in user chat box
+        // this enforces user join session before sending
+        if (currentSession) {
+            socketRef.current.emit('user:join', { sessionId: currentSession });
+        }
 
         socketRef.current.emit('user:sendMessage', {
-            sessionId: sessionRef.current,
+            sessionId: currentSession || null,
             message
         });
     };
