@@ -166,9 +166,9 @@ export default function useChatSocket() {
 
         // user sent messages were not displaying in user chat box
         // this enforces user join session before sending
-        if (currentSession) {
-            socketRef.current.emit('user:join', { sessionId: currentSession });
-        }
+        // if (currentSession) {
+        //     socketRef.current.emit('user:join', { sessionId: currentSession });
+        // }
 
         socketRef.current.emit('user:sendMessage', {
             sessionId: currentSession || null,
