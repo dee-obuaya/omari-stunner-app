@@ -106,7 +106,14 @@ export default function useChatSocket() {
                 status: msg.status || 'sent'
             }));
 
-            setMessages(normalized);
+            setMessages(prev => {
+                const merged = [...prev];
+                normalized.forEach(msg => {
+                    const exists = merged.some(m => m._id === msg._id);
+                    if (!exists) merged.push(msg);
+                });
+                return merged.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+            });
         });
 
         socket.on('admin:status', (data) => {
